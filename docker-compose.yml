@@ -1,0 +1,69 @@
+# docker compose file for running a 3-node PostgreSQL cluster
+# with 3-node etcd cluster as the DCS and one haproxy node
+version: "2"
+
+networks:
+    demo:
+
+services:
+    etcd1:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        env_file: docker/etcd.env
+        container_name: demo-etcd1
+        hostname: etcd1
+        command: etcd -name etcd1 -initial-advertise-peer-urls http://etcd1:2380
+
+    etcd2:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        env_file: docker/etcd.env
+        container_name: demo-etcd2
+        hostname: etcd2
+        command: etcd -name etcd2 -initial-advertise-peer-urls http://etcd2:2380
+
+    etcd3:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        env_file: docker/etcd.env
+        container_name: demo-etcd3
+        hostname: etcd3
+        command: etcd -name etcd3 -initial-advertise-peer-urls http://etcd3:2380
+
+    patroni1:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        env_file: docker/patroni.env
+        hostname: patroni1
+        container_name: demo-patroni1
+        environment:
+            PATRONI_NAME: patroni1
+
+    patroni2:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        env_file: docker/patroni.env
+        hostname: patroni2
+        container_name: demo-patroni2
+        environment:
+            PATRONI_NAME: patroni2
+
+    patroni3:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        env_file: docker/patroni.env
+        hostname: patroni3
+        container_name: demo-patroni3
+        environment:
+            PATRONI_NAME: patroni3
+
+    haproxy:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        env_file: docker/patroni.env
+        hostname: haproxy
+        container_name: demo-haproxy
+        ports:
+            - "5000:5000"
+            - "5001:5001"
+        command: haproxy
