@@ -9,61 +9,85 @@ services:
     etcd1:
         image: patronitraining/patroni
         networks: [ demo ]
-        env_file: docker/etcd.env
         container_name: demo-etcd1
         hostname: etcd1
-        command: etcd -name etcd1 -initial-advertise-peer-urls http://etcd1:2380
+        command: etcd
+        environment: &etcd_env
+            ETCD_NAME: etcd1
+            ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd1:2380
+            ETCD_INITIAL_CLUSTER: etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380
+            ETCD_INITIAL_CLUSTER_STATE: new
+            ETCD_INITIAL_CLUSTER_TOKEN: tutorial
+            ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+            ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
 
     etcd2:
         image: patronitraining/patroni
         networks: [ demo ]
-        env_file: docker/etcd.env
         container_name: demo-etcd2
         hostname: etcd2
-        command: etcd -name etcd2 -initial-advertise-peer-urls http://etcd2:2380
+        command: etcd
+        environment:
+            <<: *etcd_env
+            ETCD_NAME: etcd2
+            ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd2:2380
 
     etcd3:
         image: patronitraining/patroni
         networks: [ demo ]
-        env_file: docker/etcd.env
         container_name: demo-etcd3
         hostname: etcd3
-        command: etcd -name etcd3 -initial-advertise-peer-urls http://etcd3:2380
-
-    patroni1:
-        image: patronitraining/patroni
-        networks: [ demo ]
-        env_file: docker/patroni.env
-        hostname: patroni1
-        container_name: demo-patroni1
+        command: etcd
         environment:
-            PATRONI_NAME: patroni1
-
-    patroni2:
-        image: patronitraining/patroni
-        networks: [ demo ]
-        env_file: docker/patroni.env
-        hostname: patroni2
-        container_name: demo-patroni2
-        environment:
-            PATRONI_NAME: patroni2
-
-    patroni3:
-        image: patronitraining/patroni
-        networks: [ demo ]
-        env_file: docker/patroni.env
-        hostname: patroni3
-        container_name: demo-patroni3
-        environment:
-            PATRONI_NAME: patroni3
+            <<: *etcd_env
+            ETCD_NAME: etcd3
+            ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd3:2380
 
     haproxy:
         image: patronitraining/patroni
         networks: [ demo ]
-        env_file: docker/patroni.env
         hostname: haproxy
         container_name: demo-haproxy
         ports:
             - "5000:5000"
             - "5001:5001"
         command: haproxy
+        environment: &haproxy_env
+            PATRONI_SCOPE: demo
+            PATRONI_ETCD_HOSTS: "'etcd1:2379','etcd2:2379','etcd3:2379'"
+            PATRONI_RESTAPI_USERNAME: admin
+            PATRONI_RESTAPI_PASSWORD: admin
+            ETCDCTL_ENDPOINTS: http://etcd1:2379,http://etcd2:2379,http://etcd3:2379
+
+    patroni1:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        hostname: patroni1
+        container_name: demo-patroni1
+        environment: &patroni_env
+            <<: *haproxy_env
+            PATRONI_NAME: patroni1
+            PATRONI_SUPERUSER_USERNAME: postgres
+            PATRONI_SUPERUSER_PASSWORD: postgres
+            PATRONI_REPLICATION_USERNAME: replicator
+            PATRONI_REPLICATION_PASSWORD: replicate
+            PATRONI_admin_PASSWORD: admin
+            PATRONI_admin_OPTIONS: createdb,createrole
+
+    patroni2:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        hostname: patroni2
+        container_name: demo-patroni2
+        environment:
+            <<: *patroni_env
+            PATRONI_NAME: patroni2
+
+    patroni3:
+        image: patronitraining/patroni
+        networks: [ demo ]
+        hostname: patroni3
+        container_name: demo-patroni3
+        environment:
+            <<: *patroni_env
+            PATRONI_NAME: patroni3
