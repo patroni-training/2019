@@ -20,10 +20,7 @@ bandwidth. You can achieve the same with your own image by passing
 will slightly reduce the image startup time.
 
 ## Starting Patroni and etcd with docker-compose
-  * `mkdir patroni-training`
-  * `cd patroni-training`
-  * `git clone https://github.com/patroni-training/2019`
-  * `cd 2019`
+  * `curl -sO https://raw.githubusercontent.com/patroni-training/2019/master/docker-compose.yml (or download it using your preferred tool)`
   * `docker-compose up -d`
 
 ## Going further
@@ -32,4 +29,4 @@ will slightly reduce the image startup time.
   * `docker exec -ti [container_name] bash` to exec into the chosen container.
 
 Further details on how the output of those commands should look like are
-provided at  [patroni dockerfile README](docker/README.md).
+provided at  [patroni dockerfile README](https://github.com/zalando/patroni/blob/master/docker/README.md#three-node-patroni-cluster-with-three-node-etcd-cluster-and-one-haproxy-container-using-docker-compose).
